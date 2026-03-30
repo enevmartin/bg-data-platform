@@ -14,7 +14,7 @@ from typing import Any
 
 import polars as pl
 
-from platform.quality.report import ColumnStats, QualityReport
+from bgdata.quality.report import ColumnStats, QualityReport
 
 logger = logging.getLogger(__name__)
 

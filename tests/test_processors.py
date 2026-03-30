@@ -28,7 +28,7 @@ class TestExcelProcessor:
         return Path(tmp.name)
 
     def test_basic_xlsx(self):
-        from platform.processors.excel import ExcelProcessor
+        from bgdata.processors.excel import ExcelProcessor
 
         path = self._make_xlsx([
             ["Name", "Value", "Date"],
@@ -48,7 +48,7 @@ class TestExcelProcessor:
             path.unlink(missing_ok=True)
 
     def test_empty_xlsx_returns_no_frames(self):
-        from platform.processors.excel import ExcelProcessor
+        from bgdata.processors.excel import ExcelProcessor
         import openpyxl
 
         wb = openpyxl.Workbook()
@@ -63,7 +63,7 @@ class TestExcelProcessor:
             path.unlink(missing_ok=True)
 
     def test_can_handle_extensions(self):
-        from platform.processors.excel import ExcelProcessor
+        from bgdata.processors.excel import ExcelProcessor
         p = ExcelProcessor()
         assert p.can_handle(Path("report.xlsx"))
         assert p.can_handle(Path("report.xls"))
@@ -82,7 +82,7 @@ class TestCSVProcessor:
         return Path(tmp.name)
 
     def test_comma_delimited(self):
-        from platform.processors.csv import CSVProcessor
+        from bgdata.processors.csv import CSVProcessor
 
         path = self._write_csv("Name,Value,Category\nAlpha,10,A\nBeta,20,B\nGamma,30,C\n")
         try:
@@ -95,7 +95,7 @@ class TestCSVProcessor:
             path.unlink(missing_ok=True)
 
     def test_semicolon_delimited(self):
-        from platform.processors.csv import CSVProcessor
+        from bgdata.processors.csv import CSVProcessor
 
         path = self._write_csv("Name;Value;Category\nAlpha;10;A\nBeta;20;B\n")
         try:
@@ -106,7 +106,7 @@ class TestCSVProcessor:
             path.unlink(missing_ok=True)
 
     def test_tab_delimited(self):
-        from platform.processors.csv import CSVProcessor
+        from bgdata.processors.csv import CSVProcessor
 
         path = self._write_csv("Name\tValue\nAlpha\t10\nBeta\t20\n")
         try:
@@ -116,7 +116,7 @@ class TestCSVProcessor:
             path.unlink(missing_ok=True)
 
     def test_columns_snake_cased(self):
-        from platform.processors.csv import CSVProcessor
+        from bgdata.processors.csv import CSVProcessor
 
         path = self._write_csv("My Column,Another Value\n1,2\n")
         try:
@@ -127,7 +127,7 @@ class TestCSVProcessor:
             path.unlink(missing_ok=True)
 
     def test_can_handle_extensions(self):
-        from platform.processors.csv import CSVProcessor
+        from bgdata.processors.csv import CSVProcessor
 
         p = CSVProcessor()
         assert p.can_handle(Path("data.csv"))
@@ -135,7 +135,7 @@ class TestCSVProcessor:
         assert not p.can_handle(Path("data.xlsx"))
 
     def test_bom_stripped(self):
-        from platform.processors.csv import CSVProcessor
+        from bgdata.processors.csv import CSVProcessor
 
         # Write UTF-8 BOM file
         tmp = tempfile.NamedTemporaryFile(suffix=".csv", delete=False)
@@ -156,14 +156,14 @@ class TestCSVProcessor:
 
 class TestPDFProcessor:
     def test_can_handle_pdf(self):
-        from platform.processors.pdf import PDFProcessor
+        from bgdata.processors.pdf import PDFProcessor
 
         p = PDFProcessor()
         assert p.can_handle(Path("data.pdf"))
         assert not p.can_handle(Path("data.xlsx"))
 
     def test_missing_file_returns_empty(self):
-        from platform.processors.pdf import PDFProcessor
+        from bgdata.processors.pdf import PDFProcessor
 
         frames = PDFProcessor().process(Path("/nonexistent/path/file.pdf"))
         assert frames == []
@@ -172,7 +172,7 @@ class TestPDFProcessor:
 # ── snake_case helper ─────────────────────────────────────────────────────────
 
 def test_snake_case():
-    from platform.processors.base import snake_case
+    from bgdata.processors.base import snake_case
 
     assert snake_case("Hello World") == "hello_world"
     assert snake_case("CamelCase") == "camel_case"

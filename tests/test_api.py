@@ -6,9 +6,9 @@ import pytest
 import pytest_asyncio
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from platform.models.institution import Institution
-from platform.models.data_file import DataFile, FileStatus
-from platform.models.dataset import Dataset, DatasetStatus
+from bgdata.models.institution import Institution
+from bgdata.models.data_file import DataFile, FileStatus
+from bgdata.models.dataset import Dataset, DatasetStatus
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

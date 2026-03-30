@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from platform.database import get_session
-from platform.models.data_file import DataFile, DataFileRead
+from bgdata.database import get_session
+from bgdata.models.data_file import DataFile, DataFileRead
 
 router = APIRouter(prefix="/api/files", tags=["files"])
 

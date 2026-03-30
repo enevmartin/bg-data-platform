@@ -15,7 +15,7 @@ from pathlib import Path
 import chardet
 import polars as pl
 
-from platform.processors.base import BaseProcessor, snake_case
+from bgdata.processors.base import BaseProcessor, snake_case
 
 logger = logging.getLogger(__name__)
 

@@ -14,15 +14,15 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from platform.config import get_settings
-from platform.models.dataset import Dataset, DatasetStatus
-from platform.quality.checker import DataQualityChecker
-from platform.tasks.celery_app import celery_app
+from bgdata.config import get_settings
+from bgdata.models.dataset import Dataset, DatasetStatus
+from bgdata.quality.checker import DataQualityChecker
+from bgdata.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
 
-@celery_app.task(bind=True, name="platform.analyze.analyze_dataset", max_retries=1)
+@celery_app.task(bind=True, name="bgdata.analyze.analyze_dataset", max_retries=1)
 def analyze_dataset(self, dataset_id: int) -> dict:
     cfg = get_settings()
 

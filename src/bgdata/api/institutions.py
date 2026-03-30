@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from platform.database import get_session
-from platform.models.institution import Institution, InstitutionRead
+from bgdata.database import get_session
+from bgdata.models.institution import Institution, InstitutionRead
 
 router = APIRouter(prefix="/api/institutions", tags=["institutions"])
 

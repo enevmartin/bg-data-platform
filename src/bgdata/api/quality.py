@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from platform.database import get_session
-from platform.models.dataset import Dataset
+from bgdata.database import get_session
+from bgdata.models.dataset import Dataset
 
 router = APIRouter(prefix="/api/datasets", tags=["quality"])
 

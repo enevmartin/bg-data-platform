@@ -10,7 +10,7 @@ from sqlalchemy.pool import StaticPool
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from platform.config import Settings, get_settings
+from bgdata.config import Settings, get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -49,9 +49,9 @@ async def init_db(settings: Settings | None = None) -> None:
     engine = get_engine(cfg)
 
     # Import models so SQLModel knows about them before create_all
-    import platform.models.institution  # noqa: F401
-    import platform.models.data_file  # noqa: F401
-    import platform.models.dataset  # noqa: F401
+    import bgdata.models.institution  # noqa: F401
+    import bgdata.models.data_file  # noqa: F401
+    import bgdata.models.dataset  # noqa: F401
 
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)

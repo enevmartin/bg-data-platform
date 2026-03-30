@@ -15,8 +15,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from platform.config import get_settings
-from platform.database import get_engine, init_db
+from bgdata.config import get_settings
+from bgdata.database import get_engine, init_db
 
 logging.basicConfig(
     level=get_settings().log_level,
@@ -42,8 +42,8 @@ async def _seed_institutions() -> None:
     """Insert BNB and NSI if the institutions table is empty."""
     from sqlmodel import select
     from sqlmodel.ext.asyncio.session import AsyncSession
-    from platform.models.institution import Institution
-    from platform.database import get_engine
+    from bgdata.models.institution import Institution
+    from bgdata.database import get_engine
 
     async with AsyncSession(get_engine(), expire_on_commit=False) as session:
         existing = (await session.exec(select(Institution))).first()
@@ -82,11 +82,11 @@ def create_app() -> FastAPI:
     )
 
     # ── API routers ───────────────────────────────────────────────────────────
-    from platform.api.institutions import router as institutions_router
-    from platform.api.files import router as files_router
-    from platform.api.datasets import router as datasets_router
-    from platform.api.quality import router as quality_router
-    from platform.api.scrapers import router as scrapers_router
+    from bgdata.api.institutions import router as institutions_router
+    from bgdata.api.files import router as files_router
+    from bgdata.api.datasets import router as datasets_router
+    from bgdata.api.quality import router as quality_router
+    from bgdata.api.scrapers import router as scrapers_router
 
     app.include_router(institutions_router)
     app.include_router(files_router)
@@ -95,7 +95,7 @@ def create_app() -> FastAPI:
     app.include_router(scrapers_router)
 
     # ── Dashboard HTML router ─────────────────────────────────────────────────
-    from platform.dashboard.router import router as dashboard_router
+    from bgdata.dashboard.router import router as dashboard_router
 
     app.include_router(dashboard_router)
 

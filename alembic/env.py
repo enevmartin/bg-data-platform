@@ -8,8 +8,8 @@ from sqlalchemy import engine_from_config, pool
 # Add src to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from platform.config import get_settings
-from platform.models import *  # noqa — ensure all models are imported
+from bgdata.config import get_settings
+from bgdata.models import *  # noqa — ensure all models are imported
 from sqlmodel import SQLModel
 
 config = context.config

@@ -16,8 +16,8 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from platform.config import Settings, get_settings
-from platform.scrapers.base import BaseScraper, ScraperResult
+from bgdata.config import Settings, get_settings
+from bgdata.scrapers.base import BaseScraper, ScraperResult
 
 logger = logging.getLogger(__name__)
 

@@ -14,18 +14,18 @@ from fastapi.templating import Jinja2Templates
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from platform.dashboard.charts import (
+from bgdata.dashboard.charts import (
     distribution_chart,
     files_per_month_chart,
     gauge_chart,
     line_chart,
 )
-from platform.database import get_session
-from platform.models.data_file import DataFile
-from platform.models.dataset import Dataset, DatasetStatus
-from platform.models.institution import Institution
-from platform.tasks.celery_app import celery_app
-from platform.tasks.scrape import run_scraper
+from bgdata.database import get_session
+from bgdata.models.data_file import DataFile
+from bgdata.models.dataset import Dataset, DatasetStatus
+from bgdata.models.institution import Institution
+from bgdata.tasks.celery_app import celery_app
+from bgdata.tasks.scrape import run_scraper
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,6 @@ router = APIRouter(tags=["dashboard"])
 async def index(request: Request, session: AsyncSession = Depends(get_session)):
     institutions = (await session.exec(select(Institution))).all()
 
-    # Files per month aggregation
     files = (await session.exec(select(DataFile))).all()
     monthly: dict[str, int] = {}
     for f in files:
@@ -52,9 +51,9 @@ async def index(request: Request, session: AsyncSession = Depends(get_session)):
     chart_option = files_per_month_chart(monthly) if monthly else {}
 
     return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
+        request=request,
+        name="index.html",
+        context={
             "institutions": institutions,
             "files_chart": json.dumps(chart_option),
             "total_files": len(files),
@@ -68,15 +67,15 @@ async def index(request: Request, session: AsyncSession = Depends(get_session)):
 async def pipeline_status_partial(
     request: Request, session: AsyncSession = Depends(get_session)
 ):
-    """Returns an HTML fragment — polled by HTMX every 10s."""
     recent_files = (
         await session.exec(
             select(DataFile).order_by(DataFile.created_at.desc()).limit(10)
         )
     ).all()
     return templates.TemplateResponse(
-        "partials/pipeline_status.html",
-        {"request": request, "recent_files": recent_files},
+        request=request,
+        name="partials/pipeline_status.html",
+        context={"recent_files": recent_files},
     )
 
 
@@ -101,9 +100,9 @@ async def datasets_page(
     institutions = (await session.exec(select(Institution))).all()
 
     return templates.TemplateResponse(
-        "datasets.html",
-        {
-            "request": request,
+        request=request,
+        name="datasets.html",
+        context={
             "datasets": datasets,
             "institutions": institutions,
             "q": q or "",
@@ -137,7 +136,6 @@ async def dataset_detail(
             if quality:
                 gauge = gauge_chart("Quality Score", quality.get("quality_score", 0))
 
-            # Distribution charts for top 5 numeric columns
             numeric_cols = [
                 c for c in df.columns
                 if df[c].dtype in (
@@ -151,7 +149,6 @@ async def dataset_detail(
                 if opt:
                     dist_charts.append(opt)
 
-            # Time-series chart if a date column exists
             date_cols = [
                 c for c in df.columns
                 if df[c].dtype in (pl.Date, pl.Datetime)
@@ -172,9 +169,9 @@ async def dataset_detail(
                     pass
 
     return templates.TemplateResponse(
-        "dataset.html",
-        {
-            "request": request,
+        request=request,
+        name="dataset.html",
+        context={
             "dataset": dataset,
             "quality": quality,
             "gauge_chart": json.dumps(gauge),
@@ -192,8 +189,9 @@ async def scrapers_page(
 ):
     institutions = (await session.exec(select(Institution))).all()
     return templates.TemplateResponse(
-        "scraper.html",
-        {"request": request, "institutions": institutions},
+        request=request,
+        name="scraper.html",
+        context={"institutions": institutions},
     )
 
 
@@ -203,7 +201,6 @@ async def trigger_scraper_htmx(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ):
-    """HTMX endpoint — triggers a scrape task and returns an HTML status badge."""
     rows = await session.exec(
         select(Institution).where(Institution.slug == institution_slug)
     )
@@ -217,9 +214,9 @@ async def trigger_scraper_htmx(
 
     task = run_scraper.delay(institution_slug)
     return templates.TemplateResponse(
-        "partials/task_badge.html",
-        {
-            "request": request,
+        request=request,
+        name="partials/task_badge.html",
+        context={
             "task_id": task.id,
             "institution_slug": institution_slug,
             "status": "PENDING",
@@ -229,12 +226,11 @@ async def trigger_scraper_htmx(
 
 @router.get("/htmx/task/{task_id}", response_class=HTMLResponse)
 async def task_status_badge(task_id: str, request: Request):
-    """HTMX polling endpoint — returns updated task status badge."""
     result = AsyncResult(task_id, app=celery_app)
     return templates.TemplateResponse(
-        "partials/task_badge.html",
-        {
-            "request": request,
+        request=request,
+        name="partials/task_badge.html",
+        context={
             "task_id": task_id,
             "status": result.status,
             "result": result.result if result.ready() else None,

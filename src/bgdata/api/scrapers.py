@@ -5,11 +5,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from platform.database import get_session
-from platform.models.institution import Institution
-from platform.scrapers.registry import list_slugs
-from platform.tasks.celery_app import celery_app
-from platform.tasks.scrape import run_scraper
+from bgdata.database import get_session
+from bgdata.models.institution import Institution
+from bgdata.scrapers.registry import list_slugs
+from bgdata.tasks.celery_app import celery_app
+from bgdata.tasks.scrape import run_scraper
 
 router = APIRouter(prefix="/api/scrapers", tags=["scrapers"])
 

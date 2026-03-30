@@ -6,8 +6,8 @@ from fastapi.responses import StreamingResponse
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from platform.database import get_session
-from platform.models.dataset import Dataset, DatasetRead
+from bgdata.database import get_session
+from bgdata.models.dataset import Dataset, DatasetRead
 
 router = APIRouter(prefix="/api/datasets", tags=["datasets"])
 

@@ -26,8 +26,8 @@ from urllib.parse import urljoin, urlparse
 import httpx
 from bs4 import BeautifulSoup
 
-from platform.config import Settings, get_settings
-from platform.models.data_file import DataFile, FileStatus
+from bgdata.config import Settings, get_settings
+from bgdata.models.data_file import DataFile, FileStatus
 
 logger = logging.getLogger(__name__)
 

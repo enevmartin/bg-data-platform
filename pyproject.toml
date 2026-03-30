@@ -17,6 +17,7 @@ dependencies = [
     # ORM / DB
     "sqlmodel>=0.0.22",
     "alembic>=1.13.0",
+    "asyncpg>=0.30.0",
     "psycopg2-binary>=2.9.9",
     "aiosqlite>=0.20.0",
     # Task queue
@@ -54,7 +55,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/platform"]
+packages = ["src/bgdata"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

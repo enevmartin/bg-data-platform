@@ -13,16 +13,16 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from platform.config import get_settings
-from platform.models.institution import Institution
-from platform.scrapers.base import ScraperResult
-from platform.scrapers.registry import get_scraper_class
-from platform.tasks.celery_app import celery_app
+from bgdata.config import get_settings
+from bgdata.models.institution import Institution
+from bgdata.scrapers.base import ScraperResult
+from bgdata.scrapers.registry import get_scraper_class
+from bgdata.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
 
-@celery_app.task(bind=True, name="platform.scrape.run_scraper", max_retries=0)
+@celery_app.task(bind=True, name="bgdata.scrape.run_scraper", max_retries=0)
 def run_scraper(self, institution_slug: str) -> dict:
     """
     Celery entry point.  Looks up the institution in DB, instantiates the

@@ -12,9 +12,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from platform.scrapers.bnb import BNBScraper, DOWNLOAD_EXTENSIONS
-from platform.scrapers.nsi import NSIScraper
-from platform.scrapers.registry import REGISTRY, get_scraper_class, list_slugs
+from bgdata.scrapers.bnb import BNBScraper, DOWNLOAD_EXTENSIONS
+from bgdata.scrapers.nsi import NSIScraper
+from bgdata.scrapers.registry import REGISTRY, get_scraper_class, list_slugs
 
 
 # ── Registry tests ─────────────────────────────────────────────────────────────
@@ -137,14 +137,14 @@ def test_nsi_extract_links_builds_valid_filenames():
 # ── BaseScraper filename helpers ───────────────────────────────────────────────
 
 def test_filename_from_url():
-    from platform.scrapers.base import BaseScraper
+    from bgdata.scrapers.base import BaseScraper
 
     scraper = BaseScraper.__new__(BaseScraper)
     assert scraper._filename_from_url("https://example.com/data/stats_2024.xlsx") == "stats_2024.xlsx"
 
 
 def test_filename_from_url_sanitises():
-    from platform.scrapers.base import BaseScraper
+    from bgdata.scrapers.base import BaseScraper
 
     scraper = BaseScraper.__new__(BaseScraper)
     fn = scraper._filename_from_url("https://example.com/data/report name (1).pdf")

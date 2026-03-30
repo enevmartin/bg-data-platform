@@ -4,8 +4,8 @@ Tests for DataQualityChecker — uses synthetic polars DataFrames.
 import polars as pl
 import pytest
 
-from platform.quality.checker import DataQualityChecker, IQR_MULTIPLIER
-from platform.quality.report import QualityReport
+from bgdata.quality.checker import DataQualityChecker, IQR_MULTIPLIER
+from bgdata.quality.report import QualityReport
 
 
 @pytest.fixture

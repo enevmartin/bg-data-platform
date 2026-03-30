@@ -1,7 +1,7 @@
 """Celery application factory."""
 from celery import Celery
 
-from platform.config import get_settings
+from bgdata.config import get_settings
 
 cfg = get_settings()
 
@@ -10,9 +10,9 @@ celery_app = Celery(
     broker=cfg.celery_broker_url,
     backend=cfg.celery_result_backend,
     include=[
-        "platform.tasks.scrape",
-        "platform.tasks.process",
-        "platform.tasks.analyze",
+        "bgdata.tasks.scrape",
+        "bgdata.tasks.process",
+        "bgdata.tasks.analyze",
     ],
 )
 

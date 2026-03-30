@@ -6,9 +6,9 @@ To add a new scraper:
   2. Set institution_slug = "my_slug" on the class
   3. Register it here: REGISTRY["my_slug"] = MyNewScraper
 """
-from platform.scrapers.base import BaseScraper
-from platform.scrapers.bnb import BNBScraper
-from platform.scrapers.nsi import NSIScraper
+from bgdata.scrapers.base import BaseScraper
+from bgdata.scrapers.bnb import BNBScraper
+from bgdata.scrapers.nsi import NSIScraper
 
 REGISTRY: dict[str, type[BaseScraper]] = {
     BNBScraper.institution_slug: BNBScraper,

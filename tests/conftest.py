@@ -41,9 +41,9 @@ def set_test_env(tmp_path_factory):
 async def db_engine():
     """In-memory SQLite engine, fresh per test."""
     # Import models so SQLModel knows about them
-    import platform.models.institution  # noqa
-    import platform.models.data_file  # noqa
-    import platform.models.dataset  # noqa
+    import bgdata.models.institution  # noqa
+    import bgdata.models.data_file  # noqa
+    import bgdata.models.dataset  # noqa
 
     engine = create_async_engine(
         "sqlite+aiosqlite:///:memory:",
@@ -65,8 +65,8 @@ async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
 @pytest_asyncio.fixture(scope="function")
 async def client(db_engine) -> AsyncGenerator[AsyncClient, None]:
     """AsyncClient with overridden DB session."""
-    from platform.database import get_session
-    from platform.main import app
+    from bgdata.database import get_session
+    from bgdata.main import app
 
     async def override_session():
         async with AsyncSession(db_engine, expire_on_commit=False) as session:
