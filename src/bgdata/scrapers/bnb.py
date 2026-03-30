@@ -76,7 +76,7 @@ class BNBScraper(BaseScraper):
         page_url = urljoin(self.base_url, path)
         logger.info("[BNB] Scraping section '%s' → %s", category, page_url)
 
-        soup = await self.fetch_soup(page_url)
+        soup = await self.fetch_soup_js(page_url, wait_selector="a[href]")
         if soup is None:
             logger.warning("[BNB] Could not fetch section: %s", page_url)
             return

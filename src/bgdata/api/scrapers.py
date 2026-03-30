@@ -45,8 +45,16 @@ async def trigger_scraper(
 async def get_task_status(task_id: str) -> dict[str, Any]:
     """Poll the status of a Celery task."""
     result = AsyncResult(task_id, app=celery_app)
+    try:
+        status = result.status
+        result_data = result.result if result.ready() else None
+        if isinstance(result_data, Exception):
+            result_data = str(result_data)
+    except Exception:
+        status = "UNKNOWN"
+        result_data = None
     return {
         "task_id": task_id,
-        "status": result.status,
-        "result": result.result if result.ready() else None,
+        "status": status,
+        "result": result_data,
     }

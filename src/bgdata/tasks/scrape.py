@@ -51,10 +51,9 @@ def run_scraper(self, institution_slug: str) -> dict:
                 await scraper.run(session, result)
 
             # Update institution stats
-            from datetime import datetime, timezone
-            from sqlmodel import select as sel
+            from datetime import datetime
 
-            institution.last_scraped_at = datetime.now(timezone.utc)
+            institution.last_scraped_at = datetime.utcnow()
             institution.total_files += result.files_downloaded
             institution.total_size_bytes += result.total_bytes
             session.add(institution)

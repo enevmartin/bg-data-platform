@@ -207,6 +207,35 @@ class BaseScraper:
             logger.error("Failed to fetch %s: %s", url, exc)
             return None
 
+    async def fetch_soup_js(self, url: str, wait_selector: str = "body") -> Optional[BeautifulSoup]:
+        """
+        Fetch a JavaScript-rendered page via Playwright (headless Chromium).
+        Falls back to fetch_soup() if Playwright is unavailable.
+        """
+        try:
+            from playwright.async_api import async_playwright
+        except ImportError:
+            logger.warning("Playwright not available, falling back to static fetch for %s", url)
+            return await self.fetch_soup(url)
+
+        try:
+            async with async_playwright() as pw:
+                browser = await pw.chromium.launch(headless=True)
+                try:
+                    page = await browser.new_page(
+                        user_agent=self.cfg.scraper_user_agent,
+                        java_script_enabled=True,
+                    )
+                    await page.goto(url, wait_until="networkidle", timeout=30_000)
+                    await page.wait_for_selector(wait_selector, timeout=10_000)
+                    html = await page.content()
+                finally:
+                    await browser.close()
+            return BeautifulSoup(html, "lxml")
+        except Exception as exc:
+            logger.error("Playwright fetch failed for %s: %s — falling back to static", url, exc)
+            return await self.fetch_soup(url)
+
     def full_url(self, base: str, path: str) -> str:
         return urljoin(base, path)
 
@@ -304,7 +333,7 @@ class BaseScraper:
             return existing
 
         # ── Persist DataFile record ───────────────────────────────────────────
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
         if existing:
             existing.sha256_hash = sha256
             existing.file_size = total_bytes
