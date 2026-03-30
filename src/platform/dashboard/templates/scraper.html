@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Scrapers — BG Data Platform{% endblock %}
+{% block nav_scrapers %}active{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Scraper Control Panel</h1>
+    <p class="mt-1 text-sm text-gray-500">Trigger scrape runs and monitor their progress</p>
+  </div>
+
+  {% if institutions %}
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    {% for inst in institutions %}
+    <div class="card space-y-4">
+      <!-- Institution header -->
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 class="font-semibold text-gray-900 text-lg">{{ inst.name }}</h2>
+          <p class="text-xs text-gray-500">
+            <a href="{{ inst.base_url }}" target="_blank"
+               class="hover:text-indigo-600 hover:underline">{{ inst.base_url }}</a>
+          </p>
+        </div>
+        {% if inst.is_active %}
+        <span class="badge badge-success">Active</span>
+        {% else %}
+        <span class="badge badge-error">Inactive</span>
+        {% endif %}
+      </div>
+
+      <!-- Stats -->
+      <dl class="grid grid-cols-3 gap-3 text-sm border-t border-gray-100 pt-3">
+        <div>
+          <dt class="text-gray-500 text-xs">Total files</dt>
+          <dd class="font-bold text-gray-900">{{ inst.total_files }}</dd>
+        </div>
+        <div>
+          <dt class="text-gray-500 text-xs">Total size</dt>
+          <dd class="font-bold text-gray-900">
+            {{ "%.1f"|format(inst.total_size_bytes / 1048576) }} MB
+          </dd>
+        </div>
+        <div>
+          <dt class="text-gray-500 text-xs">Last run</dt>
+          <dd class="font-medium text-gray-700 text-xs">
+            {% if inst.last_scraped_at %}
+              {{ inst.last_scraped_at.strftime("%m-%d %H:%M") }}
+            {% else %}
+              Never
+            {% endif %}
+          </dd>
+        </div>
+      </dl>
+
+      <!-- Run button + task status area -->
+      <div class="flex flex-col gap-3 border-t border-gray-100 pt-3">
+        <button
+          type="button"
+          class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5
+                 bg-indigo-600 text-white rounded-lg text-sm font-medium
+                 hover:bg-indigo-700 active:bg-indigo-800 transition-colors
+                 disabled:opacity-50 disabled:cursor-not-allowed"
+          hx-post="/scrapers/{{ inst.slug }}/run"
+          hx-target="#tasks-{{ inst.slug }}"
+          hx-swap="afterbegin"
+          hx-indicator="#spinner-{{ inst.slug }}"
+        >
+          <span id="spinner-{{ inst.slug }}"
+                class="htmx-indicator w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin hidden"></span>
+          ▶ Run {{ inst.name }} Scraper
+        </button>
+
+        <!-- Task results appear here, newest first -->
+        <div id="tasks-{{ inst.slug }}" class="space-y-2 empty:hidden">
+          <!-- HTMX injects task_badge.html partials here -->
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card text-center text-gray-400 py-12">
+    No institutions found. Seed the database first.
+  </div>
+  {% endif %}
+
+  <!-- API hint -->
+  <div class="card bg-indigo-50 border-indigo-200">
+    <h3 class="font-semibold text-indigo-800 text-sm">API Endpoints</h3>
+    <p class="text-xs text-indigo-700 mt-1">
+      You can also trigger scrapers via the REST API:
+    </p>
+    <pre class="mt-2 text-xs bg-white text-gray-800 rounded p-3 overflow-x-auto border border-indigo-100">POST /api/scrapers/{institution_slug}/run
+GET  /api/scrapers/tasks/{task_id}</pre>
+  </div>
+
+</div>
+{% endblock %}

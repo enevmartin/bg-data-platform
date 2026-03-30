@@ -1,0 +1,35 @@
+{% set done = status in ('SUCCESS', 'FAILURE', 'REVOKED') %}
+<div
+  id="task-{{ task_id }}"
+  class="flex items-center gap-2 p-3 rounded-lg border border-gray-200 bg-gray-50"
+  {% if not done %}
+  hx-get="/htmx/task/{{ task_id }}"
+  hx-trigger="every 3s"
+  hx-target="#task-{{ task_id }}"
+  hx-swap="outerHTML"
+  {% endif %}
+>
+  {% if status == 'SUCCESS' %}
+    <span class="badge badge-success">✓ Success</span>
+  {% elif status == 'FAILURE' %}
+    <span class="badge badge-error">✗ Failed</span>
+  {% elif status == 'STARTED' %}
+    <span class="badge badge-warning">⟳ Running…</span>
+  {% elif status == 'REVOKED' %}
+    <span class="badge badge-pending">Revoked</span>
+  {% else %}
+    <span class="badge badge-pending">Pending…</span>
+  {% endif %}
+
+  <span class="text-xs text-gray-500 font-mono">{{ task_id[:16] }}…</span>
+
+  {% if result and status == 'SUCCESS' %}
+  <span class="text-xs text-green-700 ml-auto">
+    {{ result.get('files_downloaded', 0) }} files downloaded
+  </span>
+  {% elif result and status == 'FAILURE' %}
+  <span class="text-xs text-red-700 ml-auto truncate max-w-xs" title="{{ result }}">
+    {{ result }}
+  </span>
+  {% endif %}
+</div>

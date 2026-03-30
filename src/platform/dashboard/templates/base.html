@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}BG Data Platform{% endblock %}</title>
+
+  <!-- Tailwind CSS (CDN — no build step) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- HTMX -->
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+
+  <!-- ECharts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" defer></script>
+
+  <style>
+    .badge { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium; }
+    .badge-success { @apply bg-green-100 text-green-800; }
+    .badge-warning { @apply bg-yellow-100 text-yellow-800; }
+    .badge-error   { @apply bg-red-100 text-red-800; }
+    .badge-pending { @apply bg-gray-100 text-gray-700; }
+    .badge-info    { @apply bg-blue-100 text-blue-800; }
+    .card { @apply bg-white rounded-xl shadow-sm border border-gray-200 p-5; }
+    .nav-link { @apply px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors; }
+    .nav-link.active { @apply bg-indigo-100 text-indigo-700; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <!-- Navigation -->
+  <nav class="bg-white border-b border-gray-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-14">
+        <a href="/" class="flex items-center gap-2 font-bold text-indigo-700 text-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+          BG Data Platform
+        </a>
+        <div class="flex items-center gap-1">
+          <a href="/"         class="nav-link {% block nav_index %}{% endblock %}">Overview</a>
+          <a href="/datasets" class="nav-link {% block nav_datasets %}{% endblock %}">Datasets</a>
+          <a href="/scrapers" class="nav-link {% block nav_scrapers %}{% endblock %}">Scrapers</a>
+          <a href="/docs"     class="nav-link" target="_blank">API Docs</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="border-t border-gray-200 mt-16 py-6 text-center text-xs text-gray-400">
+    BG Data Platform &mdash; Bulgarian government statistical data pipeline
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

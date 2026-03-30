@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Datasets — BG Data Platform{% endblock %}
+{% block nav_datasets %}active{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-gray-900">Datasets</h1>
+    <span class="text-sm text-gray-500">{{ datasets|length }} result(s)</span>
+  </div>
+
+  <!-- Search / filter bar -->
+  <form method="get" action="/datasets" class="flex flex-wrap gap-3 items-end">
+    <div class="flex-1 min-w-48">
+      <label class="block text-xs font-medium text-gray-600 mb-1">Search</label>
+      <input type="text" name="q" value="{{ q }}"
+             placeholder="Dataset name…"
+             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">Institution</label>
+      <select name="institution_id"
+              class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <option value="">All</option>
+        {% for inst in institutions %}
+        <option value="{{ inst.id }}" {% if selected_institution == inst.id %}selected{% endif %}>
+          {{ inst.name }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit"
+            class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+      Filter
+    </button>
+  </form>
+
+  <!-- Dataset table -->
+  {% if datasets %}
+  <div class="card overflow-hidden p-0">
+    <table class="min-w-full divide-y divide-gray-200 text-sm">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Institution</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rows</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cols</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quality</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for ds in datasets %}
+        {% set score = ds.quality_report.quality_score if ds.quality_report else None %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-3 font-medium text-gray-900 max-w-xs truncate" title="{{ ds.name }}">
+            {{ ds.name }}
+          </td>
+          <td class="px-4 py-3 text-gray-600">{{ ds.institution_id }}</td>
+          <td class="px-4 py-3 text-gray-600">{{ ds.row_count }}</td>
+          <td class="px-4 py-3 text-gray-600">{{ ds.column_count }}</td>
+          <td class="px-4 py-3">
+            {% if score is not none %}
+              {% if score >= 80 %}
+                <span class="badge badge-success">{{ score }}</span>
+              {% elif score >= 60 %}
+                <span class="badge badge-warning">{{ score }}</span>
+              {% else %}
+                <span class="badge badge-error">{{ score }}</span>
+              {% endif %}
+            {% else %}
+              <span class="text-gray-400">—</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3">
+            {% if ds.status.value == 'analyzed' %}
+              <span class="badge badge-success">analyzed</span>
+            {% elif ds.status.value == 'ready' %}
+              <span class="badge badge-info">ready</span>
+            {% elif ds.status.value == 'analyzing' %}
+              <span class="badge badge-warning">analyzing</span>
+            {% elif ds.status.value == 'failed' %}
+              <span class="badge badge-error">failed</span>
+            {% else %}
+              <span class="badge badge-pending">{{ ds.status.value }}</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-xs text-gray-500">
+            {{ ds.created_at.strftime("%Y-%m-%d") }}
+          </td>
+          <td class="px-4 py-3 text-right">
+            <a href="/datasets/{{ ds.id }}"
+               class="text-indigo-600 hover:underline text-xs font-medium">View →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card text-center text-gray-400 py-12">
+    <p>No datasets found.</p>
+    <p class="text-xs mt-2">Run a scraper and process the downloaded files to create datasets.</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,100 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bgdata}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-bg_data_platform}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bgdata}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    command: uvicorn platform.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+      - ./alembic:/app/alembic
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-bgdata}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-bg_data_platform}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - DATA_DIR=/app/data
+      - RAW_DATA_DIR=/app/data/raw
+      - PROCESSED_DATA_DIR=/app/data/processed
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build: .
+    restart: unless-stopped
+    command: celery -A platform.tasks.celery_app worker --loglevel=info --concurrency=4
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-bgdata}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-bg_data_platform}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - DATA_DIR=/app/data
+      - RAW_DATA_DIR=/app/data/raw
+      - PROCESSED_DATA_DIR=/app/data/processed
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  flower:
+    build: .
+    restart: unless-stopped
+    command: celery -A platform.tasks.celery_app flower --port=5555
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - worker
+
+volumes:
+  postgres_data:
+  redis_data:

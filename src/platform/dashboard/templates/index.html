@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Overview — BG Data Platform{% endblock %}
+{% block nav_index %}active{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Pipeline Overview</h1>
+    <p class="mt-1 text-sm text-gray-500">Bulgarian government statistical data — BNB &amp; NSI</p>
+  </div>
+
+  <!-- Institution cards -->
+  <section>
+    <h2 class="text-lg font-semibold text-gray-700 mb-3">Institutions</h2>
+    {% if institutions %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for inst in institutions %}
+      <div class="card hover:shadow-md transition-shadow">
+        <div class="flex items-start justify-between">
+          <div>
+            <h3 class="font-semibold text-gray-900">{{ inst.name }}</h3>
+            <p class="text-xs text-gray-500 mt-0.5">{{ inst.slug }}</p>
+          </div>
+          {% if inst.is_active %}
+          <span class="badge badge-success">Active</span>
+          {% else %}
+          <span class="badge badge-error">Inactive</span>
+          {% endif %}
+        </div>
+        <dl class="mt-4 grid grid-cols-2 gap-2 text-sm">
+          <div>
+            <dt class="text-gray-500">Files</dt>
+            <dd class="font-medium text-gray-900">{{ inst.total_files }}</dd>
+          </div>
+          <div>
+            <dt class="text-gray-500">Size</dt>
+            <dd class="font-medium text-gray-900">
+              {{ "%.1f"|format(inst.total_size_bytes / 1048576) }} MB
+            </dd>
+          </div>
+          <div class="col-span-2">
+            <dt class="text-gray-500">Last scraped</dt>
+            <dd class="font-medium text-gray-900">
+              {% if inst.last_scraped_at %}
+                {{ inst.last_scraped_at.strftime("%Y-%m-%d %H:%M") }}
+              {% else %}
+                <span class="text-gray-400">Never</span>
+              {% endif %}
+            </dd>
+          </div>
+        </dl>
+        <div class="mt-4 flex gap-2">
+          <a href="/datasets?institution_id={{ inst.id }}"
+             class="text-xs text-indigo-600 hover:underline">View datasets →</a>
+          <a href="/scrapers"
+             class="text-xs text-indigo-600 hover:underline ml-auto">Run scraper →</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="card text-center text-gray-500 py-8">
+      No institutions registered yet.
+      <br>
+      <span class="text-xs mt-1 block">Run <code class="bg-gray-100 px-1 rounded">python -m platform.cli seed</code> to add BNB &amp; NSI.</span>
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- Files scraped per month chart -->
+  {% if files_chart != '{}' %}
+  <section class="card">
+    <h2 class="text-lg font-semibold text-gray-700 mb-4">Files Scraped per Month</h2>
+    <div id="chart-monthly" class="w-full h-64"></div>
+  </section>
+  {% endif %}
+
+  <!-- Pipeline status (HTMX auto-refresh every 10s) -->
+  <section>
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-lg font-semibold text-gray-700">Recent Activity</h2>
+      <span class="text-xs text-gray-400"
+            hx-get="/htmx/pipeline-status"
+            hx-trigger="every 10s"
+            hx-target="#pipeline-status"
+            hx-swap="innerHTML">
+        Auto-refreshing every 10s
+      </span>
+    </div>
+    <div id="pipeline-status"
+         hx-get="/htmx/pipeline-status"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+      <div class="text-sm text-gray-400 p-4">Loading…</div>
+    </div>
+  </section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const opt = {{ files_chart | safe }};
+  if (opt && Object.keys(opt).length) {
+    const el = document.getElementById("chart-monthly");
+    if (el) {
+      const chart = echarts.init(el);
+      chart.setOption(opt);
+      window.addEventListener("resize", () => chart.resize());
+    }
+  }
+});
+</script>
+{% endblock %}
