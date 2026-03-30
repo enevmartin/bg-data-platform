@@ -207,10 +207,11 @@ class BaseScraper:
             logger.error("Failed to fetch %s: %s", url, exc)
             return None
 
-    async def fetch_soup_js(self, url: str, wait_selector: str = "body") -> Optional[BeautifulSoup]:
+    async def fetch_soup_js(self, url: str, js_settle_ms: int = 3000) -> Optional[BeautifulSoup]:
         """
         Fetch a JavaScript-rendered page via Playwright (headless Chromium).
-        Falls back to fetch_soup() if Playwright is unavailable.
+        Waits for the DOM to load, then pauses js_settle_ms for dynamic content.
+        Falls back to fetch_soup() if Playwright is unavailable or fails.
         """
         try:
             from playwright.async_api import async_playwright
@@ -222,15 +223,15 @@ class BaseScraper:
             async with async_playwright() as pw:
                 browser = await pw.chromium.launch(headless=True)
                 try:
-                    page = await browser.new_page(
-                        user_agent=self.cfg.scraper_user_agent,
-                        java_script_enabled=True,
-                    )
-                    await page.goto(url, wait_until="networkidle", timeout=30_000)
-                    await page.wait_for_selector(wait_selector, timeout=10_000)
+                    context = await browser.new_context(user_agent=self.cfg.scraper_user_agent)
+                    page = await context.new_page()
+                    await page.goto(url, wait_until="domcontentloaded", timeout=30_000)
+                    # Wait for JS to populate dynamic content
+                    await page.wait_for_timeout(js_settle_ms)
                     html = await page.content()
                 finally:
                     await browser.close()
+            logger.info("Playwright fetched %s (%d chars)", url, len(html))
             return BeautifulSoup(html, "lxml")
         except Exception as exc:
             logger.error("Playwright fetch failed for %s: %s — falling back to static", url, exc)

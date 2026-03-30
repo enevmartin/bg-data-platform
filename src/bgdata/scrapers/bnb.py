@@ -22,14 +22,20 @@ from bgdata.scrapers.base import BaseScraper, ScraperResult
 logger = logging.getLogger(__name__)
 
 # Data sections to scrape: (category_label, path_relative_to_base_url)
+# Note: BNB does not serve download links on its /en/ landing pages.
+# Actual bulk files are under /Statistics/ (Bulgarian-language paths) in the
+# bnb_download folder.  Each path below is a section page that contains
+# <a href="/bnbweb/groups/public/documents/bnb_download/...xlsx"> links
+# directly in the static HTML — no JavaScript interaction required.
 BNB_SECTIONS: list[tuple[str, str]] = [
-    ("exchange_rates", "/en/Statistics/StExternalSector/StExchangeRates/"),
-    ("monetary_statistics", "/en/Statistics/StMonetaryStatistics/"),
-    ("interest_rates", "/en/Statistics/StInterestRates/"),
-    ("banking_system", "/en/Statistics/StBankSystem/"),
-    ("balance_of_payments", "/en/Statistics/StExternalSector/StBalanceOfPayments/"),
-    ("external_debt", "/en/Statistics/StExternalSector/StExternalDebt/"),
-    ("government_securities", "/en/Statistics/StGovernmentFinances/"),
+    ("monetary_statistics", "/Statistics/StMonetaryInterestRate/StMonetaryStatistics/index.htm"),
+    ("interest_rates", "/Statistics/StMonetaryInterestRate/StInterestRate/StIRInterestRate/index.htm"),
+    ("balance_of_payments", "/Statistics/StExternalSector/StBalancePayments/StSearchStandard/index.htm"),
+    ("external_debt", "/Statistics/StExternalSector/StGrossExternalDebt/index.htm"),
+    ("foreign_trade_exports", "/Statistics/StExternalSector/StForeignTrade/StFTExports/index.htm"),
+    ("foreign_trade_imports", "/Statistics/StExternalSector/StForeignTrade/StFTImports/index.htm"),
+    ("direct_investments_in", "/Statistics/StExternalSector/StDirectInvestments/StDIBulgaria/index.htm"),
+    ("international_investment_position", "/Statistics/StExternalSector/StInternationalInvestmentPosition/index.htm"),
 ]
 
 DOWNLOAD_EXTENSIONS = frozenset([".xlsx", ".xls", ".csv", ".pdf", ".zip"])
@@ -76,7 +82,7 @@ class BNBScraper(BaseScraper):
         page_url = urljoin(self.base_url, path)
         logger.info("[BNB] Scraping section '%s' → %s", category, page_url)
 
-        soup = await self.fetch_soup_js(page_url, wait_selector="a[href]")
+        soup = await self.fetch_soup(page_url)
         if soup is None:
             logger.warning("[BNB] Could not fetch section: %s", page_url)
             return
