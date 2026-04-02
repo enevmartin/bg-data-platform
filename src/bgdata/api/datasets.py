@@ -7,7 +7,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from bgdata.database import get_session
-from bgdata.models.dataset import Dataset, DatasetRead
+from bgdata.models.dataset import Dataset, DatasetRead, DatasetStatus
 
 router = APIRouter(prefix="/api/datasets", tags=["datasets"])
 
@@ -66,6 +66,29 @@ async def get_dataset_data(
         "columns": df.columns,
         "rows": df.to_dicts(),
     }
+
+
+@router.post("/analyze-pending")
+async def analyze_pending_datasets(
+    institution_id: Optional[int] = Query(None),
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    """Queue analyze_dataset tasks for all READY datasets that lack a quality report."""
+    from bgdata.tasks.analyze import analyze_dataset
+
+    stmt = select(Dataset).where(
+        Dataset.status.in_([DatasetStatus.READY, DatasetStatus.ANALYZED])
+    )
+    if institution_id is not None:
+        stmt = stmt.where(Dataset.institution_id == institution_id)
+    datasets = (await session.exec(stmt)).all()
+
+    task_ids = []
+    for ds in datasets:
+        task = analyze_dataset.delay(ds.id)
+        task_ids.append(task.id)
+
+    return {"queued": len(task_ids), "task_ids": task_ids[:20]}
 
 
 @router.get("/{dataset_id}/export")

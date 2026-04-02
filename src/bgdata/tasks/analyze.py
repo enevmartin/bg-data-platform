@@ -6,7 +6,7 @@ and stores the QualityReport JSON back into the Dataset record.
 """
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 import polars as pl
@@ -54,7 +54,7 @@ def analyze_dataset(self, dataset_id: int) -> dict:
 
             dataset.quality_report = report.to_dict()
             dataset.status = DatasetStatus.ANALYZED
-            dataset.analyzed_at = datetime.now(timezone.utc)
+            dataset.analyzed_at = datetime.utcnow()
             session.add(dataset)
             await session.commit()
 

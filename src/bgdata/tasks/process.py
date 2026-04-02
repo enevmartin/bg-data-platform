@@ -6,7 +6,7 @@ saves the resulting DataFrame as a parquet file, and creates Dataset records.
 """
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -112,7 +112,7 @@ def process_file(self, data_file_id: int) -> dict:
                 datasets_created.append(dataset.id)
 
             data_file.status = FileStatus.PROCESSED
-            data_file.processed_at = datetime.now(timezone.utc)
+            data_file.processed_at = datetime.utcnow()
             session.add(data_file)
             await session.commit()
 

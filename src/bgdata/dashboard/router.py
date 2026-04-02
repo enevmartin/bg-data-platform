@@ -15,13 +15,14 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from bgdata.dashboard.charts import (
+    bar_chart,
     distribution_chart,
     files_per_month_chart,
     gauge_chart,
     line_chart,
 )
 from bgdata.database import get_session
-from bgdata.models.data_file import DataFile
+from bgdata.models.data_file import DataFile, FileStatus
 from bgdata.models.dataset import Dataset, DatasetStatus
 from bgdata.models.institution import Institution
 from bgdata.tasks.celery_app import celery_app
@@ -178,6 +179,111 @@ async def dataset_detail(
             "dist_charts": [json.dumps(c) for c in dist_charts],
             "ts_chart": json.dumps(ts_chart),
         },
+    )
+
+
+# ── Pipeline dashboard ────────────────────────────────────────────────────────
+
+async def _pipeline_counts(session: AsyncSession) -> dict:
+    """Aggregate counts across pipeline stages."""
+    from bgdata.models.data_file import FileStatus
+
+    files = (await session.exec(select(DataFile))).all()
+    datasets = (await session.exec(select(Dataset))).all()
+
+    return {
+        "downloaded": sum(1 for f in files if f.status == FileStatus.DOWNLOADED),
+        "processing": sum(1 for f in files if f.status == FileStatus.PROCESSING),
+        "processed": sum(1 for f in files if f.status == FileStatus.PROCESSED),
+        "datasets_ready": sum(1 for d in datasets if d.status in (DatasetStatus.READY, DatasetStatus.ANALYZING)),
+        "datasets_analyzed": sum(1 for d in datasets if d.status == DatasetStatus.ANALYZED),
+    }
+
+
+@router.get("/pipeline", response_class=HTMLResponse)
+async def pipeline_page(
+    request: Request, session: AsyncSession = Depends(get_session)
+):
+    counts = await _pipeline_counts(session)
+    institutions = (await session.exec(select(Institution))).all()
+    datasets = (await session.exec(select(Dataset))).all()
+    files = (await session.exec(select(DataFile))).all()
+
+    # Per-institution rows
+    inst_map = {i.id: i for i in institutions}
+    from collections import defaultdict
+    inst_files: dict = defaultdict(list)
+    inst_datasets: dict = defaultdict(list)
+    for f in files:
+        inst_files[f.institution_id].append(f)
+    for d in datasets:
+        inst_datasets[d.institution_id].append(d)
+
+    institution_rows = []
+    for inst in institutions:
+        ifiles = inst_files[inst.id]
+        idatasets = inst_datasets[inst.id]
+        scores = [
+            d.quality_report["quality_score"]
+            for d in idatasets
+            if d.quality_report and "quality_score" in d.quality_report
+        ]
+        institution_rows.append({
+            "id": inst.id,
+            "name": inst.name,
+            "downloaded": sum(1 for f in ifiles if f.status == FileStatus.DOWNLOADED),
+            "processed": sum(1 for f in ifiles if f.status == FileStatus.PROCESSED),
+            "datasets": len(idatasets),
+            "analyzed": sum(1 for d in idatasets if d.status == DatasetStatus.ANALYZED),
+            "avg_quality": round(sum(scores) / len(scores)) if scores else None,
+        })
+
+    # Quality score histogram
+    quality_hist: dict = {}
+    all_scores = [
+        d.quality_report["quality_score"]
+        for d in datasets
+        if d.quality_report and "quality_score" in d.quality_report
+    ]
+    if all_scores:
+        buckets = {"0–59": 0, "60–79": 0, "80–89": 0, "90–100": 0}
+        for s in all_scores:
+            if s >= 90:
+                buckets["90–100"] += 1
+            elif s >= 80:
+                buckets["80–89"] += 1
+            elif s >= 60:
+                buckets["60–79"] += 1
+            else:
+                buckets["0–59"] += 1
+        quality_hist = bar_chart(
+            "Datasets by Quality Score",
+            list(buckets.keys()),
+            "Datasets",
+            list(buckets.values()),
+        )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="pipeline.html",
+        context={
+            "counts": counts,
+            "institutions": institutions,
+            "institution_rows": institution_rows,
+            "quality_hist": json.dumps(quality_hist) if quality_hist else None,
+        },
+    )
+
+
+@router.get("/htmx/pipeline-counts", response_class=HTMLResponse)
+async def pipeline_counts_partial(
+    request: Request, session: AsyncSession = Depends(get_session)
+):
+    counts = await _pipeline_counts(session)
+    return templates.TemplateResponse(
+        request=request,
+        name="partials/pipeline_counts.html",
+        context={"counts": counts},
     )
 
 

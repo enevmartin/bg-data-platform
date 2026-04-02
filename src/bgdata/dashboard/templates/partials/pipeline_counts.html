@@ -1,0 +1,38 @@
+{# HTMX partial — polled every 4s while processing #}
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4"
+     {% if counts.processing > 0 %}
+     hx-get="/htmx/pipeline-counts"
+     hx-trigger="every 4s"
+     hx-swap="outerHTML"
+     {% endif %}>
+
+  <!-- Downloaded -->
+  <div class="card text-center">
+    <p class="text-3xl font-bold text-gray-900">{{ counts.downloaded }}</p>
+    <p class="text-xs text-gray-500 mt-1">Downloaded</p>
+    <span class="badge badge-info mt-2">raw files</span>
+  </div>
+
+  <!-- Processing -->
+  <div class="card text-center">
+    <p class="text-3xl font-bold {% if counts.processing > 0 %}text-amber-600{% else %}text-gray-900{% endif %}">
+      {{ counts.processing }}
+    </p>
+    <p class="text-xs text-gray-500 mt-1">Processing</p>
+    <span class="badge badge-warning mt-2">{% if counts.processing > 0 %}running{% else %}idle{% endif %}</span>
+  </div>
+
+  <!-- Datasets ready -->
+  <div class="card text-center">
+    <p class="text-3xl font-bold text-gray-900">{{ counts.datasets_ready }}</p>
+    <p class="text-xs text-gray-500 mt-1">Datasets ready</p>
+    <span class="badge badge-info mt-2">parquet</span>
+  </div>
+
+  <!-- Analyzed -->
+  <div class="card text-center">
+    <p class="text-3xl font-bold text-green-600">{{ counts.datasets_analyzed }}</p>
+    <p class="text-xs text-gray-500 mt-1">Analyzed</p>
+    <span class="badge badge-success mt-2">with charts</span>
+  </div>
+</div>

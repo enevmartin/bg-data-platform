@@ -78,7 +78,17 @@ class ExcelProcessor(BaseProcessor):
                     for col, val in zip(col_names, padded[: len(col_names)]):
                         col_data[col].append(val)
 
-                df = pl.DataFrame(col_data, infer_schema_length=1000)
+                try:
+                    df = pl.DataFrame(col_data, infer_schema_length=1000)
+                except Exception:
+                    # Mixed-type columns (e.g. date + string in same column) —
+                    # stringify everything so we never lose data.
+                    safe_data = {
+                        c: [str(v) if v is not None else None for v in vals]
+                        for c, vals in col_data.items()
+                    }
+                    df = pl.DataFrame(safe_data)
+
                 # Drop entirely-null rows
                 df = df.filter(~pl.all_horizontal(pl.all().is_null()))
 
