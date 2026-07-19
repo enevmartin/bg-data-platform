@@ -69,16 +69,16 @@ cp .env.example .env
 # Set DATABASE_URL=sqlite+aiosqlite:///./data/platform.db for SQLite
 
 # Run the web server
-uvicorn platform.main:app --reload --port 8000
+uvicorn bgdata.main:app --reload --port 8000
 
 # In another terminal — run the Celery worker
-celery -A platform.tasks.celery_app worker --loglevel=info
+celery -A bgdata.tasks.celery_app worker --loglevel=info
 ```
 
 ## Running tests
 
 ```bash
-pytest tests/ -v --cov=platform --cov-report=term-missing
+pytest tests/ -v --cov=bgdata --cov-report=term-missing
 ```
 
 ## API reference
@@ -102,10 +102,10 @@ Full Swagger UI: http://localhost:8000/docs
 
 ## Adding a new scraper
 
-1. Create `src/platform/scrapers/my_scraper.py`:
+1. Create `src/bgdata/scrapers/my_scraper.py`:
 
 ```python
-from platform.scrapers.base import BaseScraper, ScraperResult
+from bgdata.scrapers.base import BaseScraper, ScraperResult
 
 class MyNewScraper(BaseScraper):
     institution_slug = "my_slug"
@@ -115,10 +115,10 @@ class MyNewScraper(BaseScraper):
         # extract links, call self.download_file(url, db_session, result, category="...")
 ```
 
-2. Register it in `src/platform/scrapers/registry.py`:
+2. Register it in `src/bgdata/scrapers/registry.py`:
 
 ```python
-from platform.scrapers.my_scraper import MyNewScraper
+from bgdata.scrapers.my_scraper import MyNewScraper
 REGISTRY["my_slug"] = MyNewScraper
 ```
 
@@ -140,7 +140,7 @@ bg-data-platform/
 ├── .env.example            # all required variables documented
 ├── alembic/                # DB migrations
 │   └── env.py
-├── src/platform/
+├── src/bgdata/
 │   ├── main.py             # FastAPI app factory + lifespan startup
 │   ├── config.py           # pydantic BaseSettings, env-driven
 │   ├── database.py         # async SQLModel engine + session

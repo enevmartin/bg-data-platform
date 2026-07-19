@@ -71,4 +71,4 @@ select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
 ignore = ["E501", "B008", "N805"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["platform"]
+known-first-party = ["bgdata"]
